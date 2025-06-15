@@ -231,7 +231,7 @@
     
     <div class="container">
         <div class="balance">
-            Saldo: Rp<span id="balance">100.000</span>
+            Saldo: Rp<span id="balance">1.000.000</span>
         </div>
         
         <div class="slot-machine">
@@ -260,7 +260,7 @@
     <div class="modal" id="topupModal">
         <div class="modal-content">
             <h3>TOP UP SALDO</h3>
-            <input type="number" id="topupAmount" placeholder="Masukkan jumlah (Rp)" min="10000" step="10000">
+            <input type="number" id="topupAmount" placeholder="Masukkan jumlah (Rp)" min="10000" step="100_10.000">
             <div class="modal-buttons">
                 <button class="cancel-btn" id="cancelTopup">BATAL</button>
                 <button class="confirm-btn" id="confirmTopup">KONFIRMASI</button>
@@ -306,7 +306,7 @@
         const confirmWithdraw = document.getElementById('confirmWithdraw');
         
         // Data game
-        let balance = 100000;
+        let balance = 1.000.000;
         let history = [];
         
         // Format rupiah
@@ -375,7 +375,7 @@
             const savedData = localStorage.getItem('slotGameData');
             if (savedData) {
                 const data = JSON.parse(savedData);
-                balance = data.balance || 100000;
+                balance = data.balance || 1.000.000;
                 history = data.history || [];
                 updateBalance();
                 renderHistory();
@@ -394,7 +394,7 @@
         
         // Putar slot
     function getRandomNumber() {
-      return Math.floor(Math.random() * (10000 - 50 + 1)) + 50;
+      return Math.floor(Math.random() * (10.000 - 50 + 1)) + 50;
     }
 
     function putarSlot() {
@@ -409,12 +409,12 @@
       }, 50); // kecepatan putaran dalam milidetik
     }
    function spin() {
-            if (balance < 10000) {
+            if (balance < 100) {
                 showMessage('Saldo tidak cukup!', 'lose');
                 return;
             }
             
-            balance -= 10000;
+            balance -= 100;
             updateBalance();
             showMessage('', '');
             
@@ -445,7 +445,7 @@
                 let note = '';
                 
                 if (slot1.textContent === '7️⃣') {
-                    winAmount = 100000; // Jackpot
+                    winAmount = 1000000; // Jackpot
                     note = 'Jackpot 3x 7️⃣';
                 } else {
                     winAmount = 50000; // Regular win
@@ -497,7 +497,7 @@
         
         confirmTopup.addEventListener('click', () => {
             const amount = parseInt(topupAmount.value);
-            if (isNaN(amount) || amount < 10000) {
+            if (isNaN(amount) || amount < 10.000) {
                 alert('Minimal top up Rp10.000');
                 return;
             }
