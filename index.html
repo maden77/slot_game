@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Slot PWA</title>
+    <meta name="description" content="Game Slot Progressive Web App dengan Top Up dan Tarik Saldo">
+    <meta name="theme-color" content="#c62828">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --primary-color: #c62828;
+            --secondary-color: #ffeb3b;
+            --win-color: #4caf50;
+            --lose-color: #f44336;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+        }
+        
+        .slot-machine {
+            background-color: var(--primary-color);
+            width: 100%;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        .slots {
+            display: flex;
+            justify-content: space-around;
+            background-color: #fff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .slot {
+            font-size: 40px;
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        button {
+            background-color: var(--secondary-color);
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background-color: #fbc02d;
+            transform: scale(1.05);
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .balance {
+            margin: 20px 0;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .message {
+            font-weight: bold;
+            height: 24px;
+            margin: 15px 0;
+            font-size: 18px;
+        }
+        
+        .win {
+            color: var(--win-color);
+        }
+        
+        .lose {
+            color: var(--lose-color);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .modal h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        
+        .modal input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+            margin: 0 5px;
+        }
+        
+        .cancel-btn {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .confirm-btn {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .history {
+            margin-top: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .history-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .credit {
+            color: var(--win-color);
+        }
+        
+        .debit {
+            color: var(--lose-color);
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 480px) {
+            .slot {
+                font-size: 30px;
+                width: 50px;
+                height: 50px;
+                line-height: 50px;
+            }
+            
+            button {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SLOT PWA</h1>
+    </header>
+    
+    <div class="container">
+        <div class="balance">
+            Saldo: Rp<span id="balance">100.000</span>
+        </div>
+        
+        <div class="slot-machine">
+            <div class="slots">
+                <div class="slot" id="slot1">🍒</div>
+                <div class="slot" id="slot2">🍒</div>
+                <div class="slot" id="slot3">🍒</div>
+            </div>
+            
+            <div class="message" id="message"></div>
+            
+            <div class="action-buttons">
+                <button id="spinButton">PUTAR (Rp10.000)</button>
+                <button id="topupButton">TOP UP</button>
+                <button id="withdrawButton">TARIK SALDO</button>
+            </div>
+        </div>
+        
+        <div class="history">
+            <h3>Riwayat Transaksi</h3>
+            <div id="historyList"></div>
+        </div>
+    </div>
+    
+    <!-- Modal Top Up -->
+    <div class="modal" id="topupModal">
+        <div class="modal-content">
+            <h3>TOP UP SALDO</h3>
+            <input type="number" id="topupAmount" placeholder="Masukkan jumlah (Rp)" min="10000" step="10000">
+            <div class="modal-buttons">
+                <button class="cancel-btn" id="cancelTopup">BATAL</button>
+                <button class="confirm-btn" id="confirmTopup">KONFIRMASI</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Tarik Saldo -->
+    <div class="modal" id="withdrawModal">
+        <div class="modal-content">
+            <h3>TARIK SALDO</h3>
+            <input type="number" id="withdrawAmount" placeholder="Masukkan jumlah (Rp)" min="10000" step="10000">
+            <div class="modal-buttons">
+                <button class="cancel-btn" id="cancelWithdraw">BATAL</button>
+                <button class="confirm-btn" id="confirmWithdraw">KONFIRMASI</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Simbol-simbol untuk slot
+        const symbols = ['🍒', '🍋', '🍊', '🍇', '🍉', '7️⃣'];
+        
+        // Elemen DOM
+        const slot1 = document.getElementById('slot1');
+        const slot2 = document.getElementById('slot2');
+        const slot3 = document.getElementById('slot3');
+        const spinButton = document.getElementById('spinButton');
+        const topupButton = document.getElementById('topupButton');
+        const withdrawButton = document.getElementById('withdrawButton');
+        const balanceDisplay = document.getElementById('balance');
+        const messageDisplay = document.getElementById('message');
+        const historyList = document.getElementById('historyList');
+        
+        // Modal elements
+        const topupModal = document.getElementById('topupModal');
+        const withdrawModal = document.getElementById('withdrawModal');
+        const topupAmount = document.getElementById('topupAmount');
+        const withdrawAmount = document.getElementById('withdrawAmount');
+        const cancelTopup = document.getElementById('cancelTopup');
+        const confirmTopup = document.getElementById('confirmTopup');
+        const cancelWithdraw = document.getElementById('cancelWithdraw');
+        const confirmWithdraw = document.getElementById('confirmWithdraw');
+        
+        // Data game
+        let balance = 100000;
+        let history = [];
+        
+        // Format rupiah
+        function formatRupiah(amount) {
+            return new Intl.NumberFormat('id-ID', { 
+                style: 'currency', 
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+        
+        // Tambah riwayat transaksi
+        function addHistory(type, amount, note = '') {
+            const transaction = {
+                id: Date.now(),
+                type,
+                amount,
+                note,
+                date: new Date().toLocaleString()
+            };
+            
+            history.unshift(transaction);
+            renderHistory();
+            saveData();
+        }
+        
+        // Render riwayat transaksi
+        function renderHistory() {
+            historyList.innerHTML = '';
+            
+            if (history.length === 0) {
+                historyList.innerHTML = '<p>Tidak ada transaksi</p>';
+                return;
+            }
+            
+            history.forEach(transaction => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                
+                const amountClass = transaction.type === 'credit' ? 'credit' : 'debit';
+                const sign = transaction.type === 'credit' ? '+' : '-';
+                
+                item.innerHTML = `
+                    <div>
+                        <strong>${transaction.note}</strong>
+                        <div class="small">${transaction.date}</div>
+                    </div>
+                    <div class="${amountClass}">${sign}${formatRupiah(transaction.amount)}</div>
+                `;
+                
+                historyList.appendChild(item);
+            });
+        }
+        
+        // Simpan data ke localStorage
+        function saveData() {
+            const data = {
+                balance,
+                history
+            };
+            localStorage.setItem('slotGameData', JSON.stringify(data));
+        }
+        
+        // Muat data dari localStorage
+        function loadData() {
+            const savedData = localStorage.getItem('slotGameData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                balance = data.balance || 100000;
+                history = data.history || [];
+                updateBalance();
+                renderHistory();
+            }
+        }
+        
+        // Update tampilan saldo
+        function updateBalance() {
+            balanceDisplay.textContent = formatRupiah(balance).replace('Rp', '');
+        }
+        
+        // Dapatkan simbol acak
+        function getRandomSymbol() {
+            return symbols[Math.floor(Math.random() * symbols.length)];
+        }
+        
+        // Putar slot
+        function spin() {
+            if (balance < 10000) {
+                showMessage('Saldo tidak cukup!', 'lose');
+                return;
+            }
+            
+            balance -= 10000;
+            updateBalance();
+            showMessage('', '');
+            
+            spinButton.disabled = true;
+            addHistory('debit', 100, 'Putaran Slot');
+            
+            // Animasi putaran
+            let spins = 0;
+            const spinInterval = setInterval(() => {
+                slot1.textContent = getRandomSymbol();
+                slot2.textContent = getRandomSymbol();
+                slot3.textContent = getRandomSymbol();
+                
+                spins++;
+                if (spins > 20) {
+                    clearInterval(spinInterval);
+                    checkWin();
+                    spinButton.disabled = false;
+                    saveData();
+                }
+            }, 100);
+        }
+        
+        // Cek kemenangan
+        function checkWin() {
+            if (slot1.textContent === slot2.textContent && slot2.textContent === slot3.textContent) {
+                let winAmount = 0;
+                let note = '';
+                
+                if (slot1.textContent === '7️⃣') {
+                    winAmount = 100000; // Jackpot
+                    note = 'Jackpot 3x 7️⃣';
+                } else {
+                    winAmount = 50000; // Regular win
+                    note = `Menang 3x ${slot1.textContent}`;
+                }
+                
+                balance += winAmount;
+                updateBalance();
+                showMessage(`Menang! +${formatRupiah(winAmount)}`, 'win');
+                addHistory('credit', winAmount, note);
+            } else if (slot1.textContent === slot2.textContent || 
+                       slot2.textContent === slot3.textContent || 
+                       slot1.textContent === slot3.textContent) {
+                const winAmount = 15000;
+                balance += winAmount;
+                updateBalance();
+                showMessage(`Kecil menang! +${formatRupiah(winAmount)}`, 'win');
+                addHistory('credit', winAmount, 'Menang 2 simbol sama');
+            } else {
+                showMessage('Coba lagi!', 'lose');
+            }
+        }
+        
+        // Tampilkan pesan
+        function showMessage(message, type) {
+            messageDisplay.textContent = message;
+            messageDisplay.className = 'message';
+            if (type) {
+                messageDisplay.classList.add(type);
+            }
+        }
+        
+        // Event listeners
+        spinButton.addEventListener('click', spin);
+        
+        topupButton.addEventListener('click', () => {
+            topupAmount.value = '';
+            topupModal.style.display = 'flex';
+        });
+        
+        withdrawButton.addEventListener('click', () => {
+            withdrawAmount.value = '';
+            withdrawModal.style.display = 'flex';
+        });
+        
+        cancelTopup.addEventListener('click', () => {
+            topupModal.style.display = 'none';
+        });
+        
+        confirmTopup.addEventListener('click', () => {
+            const amount = parseInt(topupAmount.value);
+            if (isNaN(amount) || amount < 10000) {
+                alert('Minimal top up Rp10.000');
+                return;
+            }
+            
+            balance += amount;
+            updateBalance();
+            addHistory('credit', amount, 'Top Up Saldo');
+            showMessage(`Top up berhasil +${formatRupiah(amount)}`, 'win');
+            topupModal.style.display = 'none';
+            saveData();
+        });
+        
+        cancelWithdraw.addEventListener('click', () => {
+            withdrawModal.style.display = 'none';
+        });
+        
+        confirmWithdraw.addEventListener('click', () => {
+            const amount = parseInt(withdrawAmount.value);
+            if (isNaN(amount) || amount < 10000) {
+                alert('Minimal tarik saldo Rp10.000');
+                return;
+            }
+            
+            if (amount > balance) {
+                alert('Saldo tidak mencukupi');
+                return;
+            }
+            
+            balance -= amount;
+            updateBalance();
+            addHistory('debit', amount, 'Tarik Saldo');
+            showMessage(`Penarikan berhasil -${formatRupiah(amount)}`, 'lose');
+            withdrawModal.style.display = 'none';
+            saveData();
+        });
+        
+        // Tutup modal saat klik di luar area modal
+        window.addEventListener('click', (e) => {
+            if (e.target === topupModal) {
+                topupModal.style.display = 'none';
+            }
+            if (e.target === withdrawModal) {
+                withdrawModal.style.display = 'none';
+            }
+        });
+        
+        // Muat data saat pertama kali load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            
+            // Register Service Worker untuk PWA
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            }
+        });
+    </script>
+</body>
+  </html>
