@@ -393,7 +393,22 @@
         }
         
         // Putar slot
-        function spin() {
+    function getRandomNumber() {
+      return Math.floor(Math.random() * (10000 - 50 + 1)) + 50;
+    }
+
+    function putarSlot() {
+      let slot = document.getElementById("slot");
+      let count = 0;
+      let interval = setInterval(() => {
+        slot.textContent = getRandomNumber();
+        count++;
+        if (count > 30) { // total perputaran
+          clearInterval(interval);
+        }
+      }, 50); // kecepatan putaran dalam milidetik
+    }
+   function spin() {
             if (balance < 10000) {
                 showMessage('Saldo tidak cukup!', 'lose');
                 return;
